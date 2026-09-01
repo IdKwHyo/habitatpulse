@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#123f34">
+  <meta name="description" content="Habitat Pulse reads live local biodiversity and turns one overlooked urban space into a practical micro-habitat plan.">
+  <title>Habitat Pulse — A living city, made visible</title>
+  <link rel="preload" href="assets/fonts/newsreader-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/manrope-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/vendor/lenis-1.3.26.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the experience</a>
+
+  <div class="world" aria-hidden="true">
+    <div class="world-fallback"></div>
+    <canvas id="ecosystem-canvas"></canvas>
+    <div class="world-vignette"></div>
+    <div class="world-grain"></div>
+  </div>
+
+  <div class="letterbox letterbox--top" aria-hidden="true"></div>
+  <div class="letterbox letterbox--bottom" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="wordmark" href="#arrival" aria-label="Habitat Pulse home">
+      <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M7 27C8 15 15 8 28 7c-1 12-8 20-21 20Z"/><path d="M9 25c5-7 10-11 17-15"/></svg>
+      <span>Habitat Pulse</span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#evidence">Field reading</a>
+      <a href="#planner">Build a patch</a>
+    </nav>
+    <div class="live-place" aria-live="polite"><i></i><span id="nav-place">Bangkok · live</span></div>
+  </header>
+
+  <main id="main">
+    <section class="scene scene--arrival" id="arrival" aria-labelledby="arrival-title">
+      <div class="scene-sticky arrival-grid">
+        <p class="field-note field-note--vertical">Urban ecology / field no. 01</p>
+        <div class="arrival-copy">
+          <h1 id="arrival-title" aria-label="A city is never only concrete">
+            <span class="title-mask"><span>A city is</span></span>
+            <span class="title-mask"><span>never only</span></span>
+            <span class="title-mask title-mask--accent"><span>concrete.</span></span>
+          </h1>
+          <p class="arrival-intro">Habitat Pulse reads wildlife observations around you, then helps one overlooked space become useful to the living network.</p>
+          <a class="text-link text-link--light" href="#evidence"><span>Read my neighborhood</span><i>↘</i></a>
+        </div>
+
+        <aside class="observation-float depth-plate" aria-label="Current local biodiversity signal">
+          <span class="observation-float__label">Current field signal</span>
+          <strong id="hero-count">Reading…</strong>
+          <p><span id="hero-groups">local wildlife</span><br><span id="hero-weather">live conditions</span></p>
+          <div class="pulse-line"><i></i></div>
+        </aside>
+
+        <p class="arrival-caption">Real observations. Honest limits. One practical next step.</p>
+      </div>
+    </section>
+
+    <section class="scene scene--signal" id="signal" aria-labelledby="signal-title">
+      <div class="signal-layout">
+        <div class="signal-copy">
+          <p class="margin-label">The living signal</p>
+          <h2 id="signal-title">The city is<br>already speaking.</h2>
+          <p>Birds, butterflies, reptiles, fungi, and plants leave a trail of observations. The trail is incomplete—but it is enough to begin looking with care.</p>
+        </div>
+
+        <div class="species-stage" id="species-stage">
+          <figure class="specimen specimen--a" data-depth="0.8">
+            <div class="specimen-placeholder"></div>
+            <figcaption>Connecting to iNaturalist</figcaption>
+          </figure>
+          <figure class="specimen specimen--b" data-depth="1.15">
+            <div class="specimen-placeholder"></div>
+            <figcaption>Research-grade observations</figcaption>
+          </figure>
+          <figure class="specimen specimen--c" data-depth="0.55">
+            <div class="specimen-placeholder"></div>
+            <figcaption>Within 5 km</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene scene--connection" id="connection" aria-labelledby="connection-title">
+      <div class="scene-sticky connection-stage">
+        <p class="connection-kicker">One city. Thousands of small thresholds.</p>
+        <h2 id="connection-title">
+          <span class="connection-line connection-line--one">A balcony.</span>
+          <span class="connection-line connection-line--two">A rooftop.</span>
+          <span class="connection-line connection-line--three">A schoolyard.</span>
+        </h2>
+        <p class="connection-thesis"><span>Separated, they are small.</span><strong>Together, they become habitat.</strong></p>
+        <div class="connection-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+      </div>
+    </section>
+
+    <section class="scene scene--evidence" id="evidence" aria-labelledby="evidence-title">
+      <div class="evidence-surface">
+        <header class="evidence-heading">
+          <div>
+            <p class="margin-label">A field reading, not a census</p>
+            <h2 id="evidence-title">See who has been<br>recorded nearby.</h2>
+          </div>
+          <p>Observation density reflects both wildlife and observer activity. We show the evidence without pretending it is complete.</p>
+        </header>
+
+        <div class="place-search" role="search">
+          <label for="city">Choose a place</label>
+          <div class="place-search__line">
+            <input id="city" value="Bangkok, Thailand" autocomplete="off" placeholder="City, region, or country">
+            <button id="search-btn" type="button">Search <span>↗</span></button>
+          </div>
+          <div class="place-search__meta">
+            <button id="geo-btn" type="button">Use my location</button>
+            <div class="radius-control" aria-label="Observation radius">
+              <span>Radius</span>
+              <button data-radius="2" type="button" aria-pressed="false">2 km</button>
+              <button data-radius="5" type="button" class="active" aria-pressed="true">5 km</button>
+              <button data-radius="10" type="button" aria-pressed="false">10 km</button>
+            </div>
+          </div>
+          <p class="api-message" id="api-message" role="status"></p>
+        </div>
+
+        <div class="map-composition">
+          <div class="map-plane" id="map-plane">
+            <div id="map" aria-label="Map of nearby research-grade biodiversity observations"></div>
+            <div class="map-loading" id="map-loading" role="status" aria-hidden="true"><span aria-hidden="true"></span><p>Reading the field</p></div>
+          </div>
+
+          <aside class="field-reading">
+            <p class="field-reading__place" id="field-place">Bangkok, Thailand</p>
+            <div class="field-reading__statement"><strong id="records">—</strong><span>research-grade records inside this radius</span></div>
+            <dl>
+              <div><dt>Species shown</dt><dd id="taxa">—</dd></div>
+              <div><dt>Current air</dt><dd id="temp">—</dd></div>
+              <div><dt>Rain outlook</dt><dd id="rain">—</dd></div>
+              <div><dt>Wildlife groups</dt><dd id="group-count">—</dd></div>
+            </dl>
+          </aside>
+        </div>
+
+        <div class="observed-strip" id="observed-strip" aria-label="Recently observed species"></div>
+        <p class="sr-only" id="field-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="scene scene--planner" id="planner" aria-labelledby="planner-title">
+      <div class="planner-heading">
+        <p class="margin-label">Turn evidence into action</p>
+        <h2 id="planner-title">Give one overlooked<br>space a job.</h2>
+        <p>The plan is deliberately explainable. Every recommendation responds to the space you describe and the wildlife already being recorded around it.</p>
+      </div>
+
+      <div class="planner-layout">
+        <form class="patch-form" id="patch-form">
+          <fieldset>
+            <legend>What space do you have?</legend>
+            <div class="choice-lines">
+              <input type="radio" name="space" id="space-balcony" value="balcony" checked>
+              <label for="space-balcony"><span>Balcony</span><small>Even a small one</small></label>
+              <input type="radio" name="space" id="space-rooftop" value="rooftop">
+              <label for="space-rooftop"><span>Rooftop</span><small>Sunny and exposed</small></label>
+              <input type="radio" name="space" id="space-schoolyard" value="schoolyard">
+              <label for="space-schoolyard"><span>Schoolyard</span><small>A shared learning patch</small></label>
+              <input type="radio" name="space" id="space-corner" value="community corner">
+              <label for="space-corner"><span>Small corner</span><small>Yard or public edge</small></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Who should it help most?</legend>
+            <div class="choice-lines choice-lines--compact">
+              <input type="radio" name="goal" id="goal-pollinators" value="pollinators" checked>
+              <label for="goal-pollinators"><span>Pollinators</span></label>
+              <input type="radio" name="goal" id="goal-birds" value="birds">
+              <label for="goal-birds"><span>Urban birds</span></label>
+              <input type="radio" name="goal" id="goal-mixed" value="mixed">
+              <label for="goal-mixed"><span>Mixed wildlife</span></label>
+              <input type="radio" name="goal" id="goal-cooling" value="cooling">
+              <label for="goal-cooling"><span>Plants + cooling</span></label>
+            </div>
+          </fieldset>
+
+          <div class="patch-conditions">
+            <label>Daily sunlight<select id="sunlight"><option value="full">6+ hours</option><option value="partial">3–6 hours</option><option value="shade">Under 3 hours</option></select></label>
+            <label>Current surface<select id="surface"><option value="hard">Mostly hard</option><option value="mixed">Some plants</option><option value="green">Mostly planted</option></select></label>
+          </div>
+
+          <label class="area-range" for="size"><span>Available area</span><strong><output id="size-label">8</output> m²</strong><input id="size" type="range" min="1" max="50" value="8"></label>
+          <button class="shape-button" type="submit"><span>Shape this habitat</span><i>↗</i></button>
+        </form>
+
+        <section class="patch-result" id="patch-result" aria-labelledby="plan-title">
+          <div class="readiness-vessel" id="readiness-vessel" role="meter" aria-label="Habitat readiness" aria-valuemin="0" aria-valuemax="100" aria-valuenow="46" style="--score:46">
+            <span>Habitat<br>readiness</span><strong id="score">46</strong>
+          </div>
+          <div class="patch-result__copy">
+            <h3 id="plan-title">Your balcony can become a pollinator stop.</h3>
+            <p id="plan-copy">Strong sun creates good planting options. Pollinators are already being observed nearby.</p>
+          </div>
+          <div class="action-list" id="actions-list"></div>
+          <div class="impact-sentence"><strong id="green-area">4.2 m²</strong> of potential planted area could support <strong id="guilds">3 wildlife groups</strong> and retain roughly <strong id="runoff">25 L</strong> during a 10 mm rain event.</div>
+          <p class="method-note">Planning estimate, not an ecological assessment. Rain retention assumes 60% capture across planted area. Confirm native plant choices with a local expert.</p>
+        </section>
+        <p class="sr-only" id="plan-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="scene scene--resolution" id="resolution" aria-labelledby="resolution-title">
+      <div class="resolution-copy">
+        <p>Habitat is not always somewhere else.</p>
+        <h2 id="resolution-title">A living network<br>can begin here.</h2>
+        <a class="text-link text-link--light" href="#planner"><span>Build your first patch</span><i>↑</i></a>
+      </div>
+      <p class="resolution-note">Powered by iNaturalist · Gemini · Google Maps · Open-Meteo</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>Habitat Pulse · Hack the Habitat 2026</span>
+    <span>Small spaces, connected with intent.</span>
+  </footer>
+
+  <script src="assets/vendor/lenis-1.3.26.min.js"></script>
+  <script src="assets/vendor/gsap-3.15.0.min.js"></script>
+  <script src="assets/vendor/scrolltrigger-3.15.0.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

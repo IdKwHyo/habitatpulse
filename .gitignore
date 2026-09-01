@@ -1,0 +1,11 @@
+node_modules/
+dist/
+public/
+.next/
+.wrangler/
+next-env.d.ts
+*.zip
+*.tar.gz
+.DS_Store
+
+.env.local
