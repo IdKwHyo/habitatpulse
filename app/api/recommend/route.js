@@ -107,6 +107,8 @@ ${JSON.stringify(habitat)}
     );
 
     if (!geminiResponse.ok) {
+      const providerError = await geminiResponse.text();
+      console.error("Gemini provider error:", geminiResponse.status, providerError);
       throw new Error(`Gemini returned ${geminiResponse.status}`);
     }
 
