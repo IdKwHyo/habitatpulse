@@ -56,7 +56,7 @@ ${JSON.stringify(habitat)}
 `;
 
     const geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
       {
         method: "POST",
         headers: {
@@ -71,7 +71,7 @@ ${JSON.stringify(habitat)}
             }
           ],
           generationConfig: {
-        thinkingConfig: { thinkingLevel: "low" },
+        thinkingConfig: { thinkingLevel: "minimal" },
             temperature: 0.35,
             maxOutputTokens: 900,
             responseMimeType: "application/json",
