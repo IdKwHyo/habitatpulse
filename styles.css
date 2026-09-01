@@ -336,6 +336,9 @@ img { max-width: 100%; display: block; }
 .shape-button i { font-style: normal; transition: transform 160ms var(--ease-out); }
 .shape-button:hover i { transform: translate(4px, -4px); }
 .shape-button:active { transform: scale(.99); }
+.shape-button:disabled { cursor: wait; opacity: .62; }
+.species-marker { width: 15px; height: 15px; display: block; border: 1px solid rgba(241,246,236,.9); border-radius: 50%; background: var(--marker-color); box-shadow: 0 0 0 7px rgba(184,219,117,.12), 0 8px 22px rgba(4,22,16,.35); transition: transform 180ms var(--ease-out); }
+.species-marker:hover { transform: scale(1.35); }
 
 .patch-result { grid-column: 7 / -1; position: sticky; top: 110px; min-height: 780px; display: grid; grid-template-columns: .42fr .58fr; grid-template-rows: auto auto 1fr auto auto; gap: 36px 42px; padding: clamp(34px, 5vw, 70px); color: var(--ink-dark); background: var(--forest); overflow: hidden; }
 .patch-result::before { content: ""; position: absolute; width: 70%; aspect-ratio: 1; right: -25%; top: -22%; border-radius: 50%; background: radial-gradient(circle, oklch(80% .14 132 / .16), transparent 68%); pointer-events: none; }

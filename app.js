@@ -67,27 +67,57 @@ function observationName(observation) {
 }
 
 let map;
-let observationLayer;
 let areaCircle;
+let infoWindow;
+let AdvancedMarkerElement;
+let observationMarkers = [];
 let areaRequestId = 0;
 let placeRequestId = 0;
+let mapsLoader;
 
-function initMap() {
-  if (!window.L || !$('map')) return;
-  map = window.L.map("map", { zoomControl: false, preferCanvas: true }).setView([state.lat, state.lng], 13);
-  window.L.control.zoom({ position: "topright" }).addTo(map);
-  window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap contributors"
-  }).addTo(map);
-  observationLayer = window.L.layerGroup().addTo(map);
-  areaCircle = window.L.circle([state.lat, state.lng], {
+function loadGoogleMaps(apiKey) {
+  if (window.google?.maps?.importLibrary) return Promise.resolve();
+  if (mapsLoader) return mapsLoader;
+  mapsLoader = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&v=weekly&auth_referrer_policy=origin`;
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error("Google Maps failed to load."));
+    document.head.append(script);
+  });
+  return mapsLoader;
+}
+
+async function initMap() {
+  if (!$('map')) return;
+  const config = await fetchJSON("/api/maps-config");
+  await loadGoogleMaps(config.apiKey);
+  const [{ Map }, markerLibrary] = await Promise.all([
+    google.maps.importLibrary("maps"),
+    google.maps.importLibrary("marker")
+  ]);
+  AdvancedMarkerElement = markerLibrary.AdvancedMarkerElement;
+  map = new Map($('map'), {
+    center: { lat: state.lat, lng: state.lng },
+    zoom: 13,
+    mapId: config.mapId,
+    disableDefaultUI: true,
+    zoomControl: true,
+    gestureHandling: "cooperative"
+  });
+  infoWindow = new google.maps.InfoWindow();
+  areaCircle = new google.maps.Circle({
+    map,
+    center: { lat: state.lat, lng: state.lng },
     radius: state.radius * 1000,
-    color: "#b8db75",
-    weight: 1,
+    strokeColor: "#b8db75",
+    strokeOpacity: 0.8,
+    strokeWeight: 1,
     fillColor: "#a9cf74",
-    fillOpacity: 0.07
-  }).addTo(map);
+    fillOpacity: 0.08,
+    clickable: false
+  });
 }
 
 function setApiMessage(message = "") {
@@ -109,30 +139,58 @@ function uniqueObservations(observations) {
   return [...unique.values()];
 }
 
+function createMapPopup(observation) {
+  const root = document.createElement("div");
+  root.className = "map-popup";
+  const photo = observationPhoto(observation);
+  if (photo) {
+    const image = document.createElement("img");
+    image.src = photo;
+    image.alt = observationName(observation);
+    root.append(image);
+  }
+  const title = document.createElement("strong");
+  title.textContent = observationName(observation);
+  const details = document.createElement("span");
+  details.textContent = `${observation.taxon?.name || ""} · ${observation.observed_on || "recent observation"}`;
+  root.append(title, details);
+  return root;
+}
+
 function renderMap(observations, fitObservations = true) {
-  if (!map || !observationLayer) return;
-  observationLayer.clearLayers();
-  const bounds = [];
+  if (!map || !AdvancedMarkerElement) return;
+  observationMarkers.forEach((marker) => { marker.map = null; });
+  observationMarkers = [];
+  const bounds = new google.maps.LatLngBounds();
   observations.slice(0, 30).forEach((observation, index) => {
     const coordinates = observation.geojson?.coordinates;
     if (!coordinates || coordinates.length < 2) return;
-    const common = observationName(observation);
-    const scientific = observation.taxon?.name || "";
-    const photo = observationPhoto(observation);
-    const marker = window.L.circleMarker([coordinates[1], coordinates[0]], {
-      radius: index % 5 === 0 ? 7 : 5,
-      color: "rgba(241,246,236,.86)",
-      weight: 1,
-      fillColor: index % 4 === 0 ? "#e3bd7c" : "#b8db75",
-      fillOpacity: 0.9
+    const position = { lat: Number(coordinates[1]), lng: Number(coordinates[0]) };
+    if (!Number.isFinite(position.lat) || !Number.isFinite(position.lng)) return;
+    const markerElement = document.createElement("span");
+    markerElement.className = "species-marker";
+    markerElement.style.setProperty("--marker-color", index % 4 === 0 ? "#e3bd7c" : "#b8db75");
+    const marker = new AdvancedMarkerElement({
+      map,
+      position,
+      title: observationName(observation),
+      content: markerElement
     });
-    marker.bindPopup(`<div class="map-popup">${photo ? `<img src="${escapeHtml(photo)}" alt="">` : ""}<strong>${escapeHtml(common)}</strong><span><em>${escapeHtml(scientific)}</em><br>${escapeHtml(observation.observed_on || "recent observation")}</span></div>`);
-    marker.addTo(observationLayer);
-    bounds.push([coordinates[1], coordinates[0]]);
+    marker.addListener("click", () => {
+      infoWindow.setContent(createMapPopup(observation));
+      infoWindow.open({ map, anchor: marker });
+    });
+    observationMarkers.push(marker);
+    bounds.extend(position);
   });
-  if (fitObservations && bounds.length) map.fitBounds(window.L.latLngBounds(bounds).pad(0.28), { maxZoom: 14 });
-  areaCircle?.setLatLng([state.lat, state.lng]).setRadius(state.radius * 1000);
-  window.setTimeout(() => map.invalidateSize(), 120);
+  if (fitObservations && !bounds.isEmpty()) {
+    map.fitBounds(bounds, 54);
+    google.maps.event.addListenerOnce(map, "idle", () => {
+      if (map.getZoom() > 14) map.setZoom(14);
+    });
+  }
+  areaCircle?.setCenter({ lat: state.lat, lng: state.lng });
+  areaCircle?.setRadius(state.radius * 1000);
 }
 
 function renderSpeciesStage(observations, isSample = false) {
@@ -181,8 +239,10 @@ async function loadArea() {
   setLoading(true);
   setApiMessage("");
   if (map) {
-    map.setView([state.lat, state.lng], state.radius <= 2 ? 14 : state.radius <= 5 ? 13 : 12);
-    areaCircle?.setLatLng([state.lat, state.lng]).setRadius(state.radius * 1000);
+    map.setCenter({ lat: state.lat, lng: state.lng });
+    map.setZoom(state.radius <= 2 ? 14 : state.radius <= 5 ? 13 : 12);
+    areaCircle?.setCenter({ lat: state.lat, lng: state.lng });
+    areaCircle?.setRadius(state.radius * 1000);
   }
 
   const observationsUrl = `https://api.inaturalist.org/v1/observations?lat=${state.lat}&lng=${state.lng}&radius=${state.radius}&quality_grade=research&photos=true&per_page=60&order_by=observed_on&order=desc`;
@@ -350,6 +410,52 @@ function generatePlan(animate = true) {
   }
 }
 
+async function generateGeminiPlan() {
+  generatePlan(true);
+  const button = document.querySelector(".shape-button");
+  const buttonText = button?.querySelector("span");
+  const originalText = buttonText?.textContent || "Shape this habitat";
+  if (button) button.disabled = true;
+  if (buttonText) buttonText.textContent = "Reading the habitat…";
+  $('plan-status').textContent = "Generating an AI-refined habitat plan.";
+  const payload = {
+    place: state.place,
+    space: selectedValue("space") || "balcony",
+    goal: selectedValue("goal") || "pollinators",
+    sunlight: $('sunlight').value,
+    surface: $('surface').value,
+    size: Number($('size').value),
+    wildlifeGroups: [...state.groups],
+    nearbySpecies: uniqueObservations(state.observations).slice(0, 10).map(observationName)
+  };
+  try {
+    const response = await fetch("/api/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error(`Recommendation failed with ${response.status}`);
+    const recommendation = await response.json();
+    if (!Array.isArray(recommendation.actions) || recommendation.actions.length !== 4) throw new Error("Invalid habitat plan");
+    $('plan-title').textContent = recommendation.title || "Your habitat plan";
+    $('plan-copy').textContent = recommendation.summary || "A locally informed plan for this space.";
+    $('actions-list').innerHTML = recommendation.actions.map((action, index) => {
+      const points = clamp(Number(action.points) || 10, 8, 18);
+      return `<label class="action-item"><input type="checkbox" data-points="${points}" ${index === 0 ? "checked" : ""}><span><strong>${escapeHtml(action.title)}</strong><small>${escapeHtml(action.rationale)}</small></span><span class="action-points">+${points}</span></label>`;
+    }).join("");
+    $('actions-list').querySelectorAll("input").forEach((input) => input.addEventListener("change", updateScore));
+    document.querySelector(".method-note").textContent = `${recommendation.caution || "Confirm local suitability with an expert."} AI-assisted planning estimate, not an ecological assessment.`;
+    updateScore();
+    $('plan-status').textContent = `AI habitat plan generated. Readiness ${$('score').textContent} out of 100.`;
+  } catch (error) {
+    console.error("Gemini refinement failed:", error);
+    $('plan-status').textContent = "AI refinement was unavailable. The transparent local plan is still shown.";
+  } finally {
+    if (button) button.disabled = false;
+    if (buttonText) buttonText.textContent = originalText;
+  }
+}
+
 function setupInterface() {
   $('search-btn').addEventListener("click", searchCity);
   $('city').addEventListener("keydown", (event) => { if (event.key === "Enter") searchCity(); });
@@ -365,10 +471,10 @@ function setupInterface() {
     loadArea();
   }));
   $('size').addEventListener("input", () => { $('size-label').textContent = $('size').value; });
-  $('patch-form').addEventListener("submit", (event) => {
+  $('patch-form').addEventListener("submit", async (event) => {
     event.preventDefault();
-    generatePlan(true);
     if (isMobile) $('patch-result').scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    await generateGeminiPlan();
   });
 }
 
@@ -690,11 +796,13 @@ function setupMotion(ecosystem) {
   ScrollTrigger.refresh();
 }
 
-initMap();
 setupInterface();
 generatePlan(false);
 const ecosystem = createEcosystem();
 setupMotion(ecosystem);
 setupDepthPlate();
-loadArea();
+initMap().catch((error) => {
+  console.error("Google Maps initialization failed:", error);
+  setApiMessage("Google Maps could not load. Biodiversity data and the planner remain available.");
+}).finally(loadArea);
 window.addEventListener("beforeunload", () => ecosystem?.dispose(), { once: true });
