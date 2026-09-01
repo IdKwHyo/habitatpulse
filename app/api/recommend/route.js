@@ -71,6 +71,7 @@ ${JSON.stringify(habitat)}
             }
           ],
           generationConfig: {
+        thinkingConfig: { thinkingLevel: "low" },
             temperature: 0.35,
             maxOutputTokens: 900,
             responseMimeType: "application/json",
