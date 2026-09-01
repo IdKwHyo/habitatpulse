@@ -76,16 +76,43 @@ let placeRequestId = 0;
 let mapsLoader;
 
 function loadGoogleMaps(apiKey) {
-  if (window.google?.maps?.importLibrary) return Promise.resolve();
-  if (mapsLoader) return mapsLoader;
+  if (window.google?.maps?.importLibrary) {
+    return Promise.resolve();
+  }
+
+  if (mapsLoader) {
+    return mapsLoader;
+  }
+
   mapsLoader = new Promise((resolve, reject) => {
+    const callbackName = "__habitatPulseMapsReady";
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&v=weekly&auth_referrer_policy=origin`;
+
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve();
+    };
+
+    const params = new URLSearchParams({
+      key: apiKey,
+      loading: "async",
+      v: "weekly",
+      libraries: "marker",
+      callback: callbackName,
+      auth_referrer_policy: "origin"
+    });
+
+    script.src = `https://maps.googleapis.com/maps/api/js?${params}`;
     script.async = true;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error("Google Maps failed to load."));
+
+    script.onerror = () => {
+      delete window[callbackName];
+      reject(new Error("Google Maps failed to load."));
+    };
+
     document.head.append(script);
   });
+
   return mapsLoader;
 }
 
